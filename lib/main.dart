@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mi App Flutter',
+      title: 'Mi appTienda',
       debugShowCheckedModeBanner: false, // quita el banner de debug
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -21,6 +21,11 @@ class MyApp extends StatelessWidget {
       ),
       // Pantalla inicial
       initialRoute: '/login',
+      builder: (context, child) {
+        return SafeArea(
+          child: child!,
+        );
+      },
 
       // Rutas nombradas
       routes: {
