@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/producto.dart';
+import '../../data/models/producto.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   final List<Producto> productos;

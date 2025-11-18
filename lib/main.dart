@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
-import 'screens/offline_products_screen.dart';
-// más imports de pantallas futuras aquí
+import 'package:provider/provider.dart';
+import 'presentation/screens/login_screen.dart';
+import 'presentation/screens/offline_products_screen.dart';
+import 'domain/controllers/product_controller.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProductController()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,25 +22,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mi appTienda',
-      debugShowCheckedModeBanner: false, // quita el banner de debug
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      // Pantalla inicial
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/login',
-      builder: (context, child) {
-        return SafeArea(
-          child: child!,
-        );
-      },
-
-      // Rutas nombradas
       routes: {
         '/login': (context) => const LoginScreen(),
         '/offline_products': (context) => const OfflineProductsScreen(),
-        // '/home': (context) => const HomeScreen(), // ejemplo futuro
-        // '/product_details': (context) => const ProductDetailsScreen(),
       },
     );
   }
