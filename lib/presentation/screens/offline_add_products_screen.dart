@@ -20,6 +20,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   void initState() {
     super.initState();
+
     if (widget.producto != null) {
       _nombreController.text = widget.producto!.nombre;
       _precioController.text = widget.producto!.precio.toString();
@@ -32,85 +33,82 @@ class _AddProductScreenState extends State<AddProductScreen> {
     final controller = context.read<ProductController>();
 
     return Scaffold(
-    appBar: AppBar(title: Text(esEdicion ? 'Editar Producto' : 'Agregar Producto')),
-    
-    body: GestureDetector(
-      behavior: HitTestBehavior.opaque, // Detecta toque en toda la pantalla
-      onTap: () {
-        FocusScope.of(context).unfocus(); // Cierra el teclado
-      },
+      appBar: AppBar(
+        title: Text(esEdicion ? 'Editar Producto' : 'Agregar Producto'),
+      ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
 
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nombreController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Ingrese un nombre' : null,
-              ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nombreController,
+                  decoration: const InputDecoration(labelText: 'Nombre'),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Ingrese un nombre' : null,
+                ),
 
-              TextFormField(
-                controller: _precioController,
-                decoration: const InputDecoration(labelText: 'Precio'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Ingrese un precio';
-                  if (double.tryParse(v) == null) return 'Ingrese un número válido';
-                  return null;
-                },
-              ),
+                TextFormField(
+                  controller: _precioController,
+                  decoration: const InputDecoration(labelText: 'Precio'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Ingrese un precio';
+                    if (double.tryParse(v) == null) return 'Ingrese un número válido';
+                    return null;
+                  },
+                ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              _guardando
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton.icon(
-                      icon: const Icon(Icons.save),
-                      label: Text(esEdicion ? 'Actualizar' : 'Guardar'),
-                      onPressed: () async {
-                        if (!_formKey.currentState!.validate()) return;
+                _guardando
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton.icon(
+                        icon: const Icon(Icons.save),
+                        label: Text(esEdicion ? 'Actualizar' : 'Guardar'),
+                        onPressed: () async {
+                          if (!_formKey.currentState!.validate()) return;
 
-                        setState(() => _guardando = true);
+                          setState(() => _guardando = true);
 
-                        final nombre = _nombreController.text.trim();
-                        final precio =
-                            double.parse(_precioController.text.trim());
+                          final nombre = _nombreController.text.trim();
+                          final precio = double.parse(_precioController.text.trim());
 
-                        if (esEdicion) {
-                          final actualizado = Producto(
-                            id: widget.producto!.id,
-                            nombre: nombre,
-                            precio: precio,
-                          );
-                          await controller.actualizarProducto(actualizado);
-                        } else {
-                          await controller.agregarProductoConId(nombre, precio);
-                        }
+                          if (esEdicion) {
+                            final actualizado = Producto(
+                              id: widget.producto!.id,
+                              nombre: nombre,
+                              precio: precio,
+                            );
+                            await controller.actualizarProducto(actualizado);
+                          } else {
+                            await controller.agregarProducto(nombre, precio);
+                          }
 
-                        if (mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(esEdicion
-                                  ? 'Producto actualizado'
-                                  : 'Producto agregado'),
-                            ),
-                          );
-                        }
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(esEdicion
+                                    ? 'Producto actualizado'
+                                    : 'Producto agregado'),
+                              ),
+                            );
+                          }
 
-                        setState(() => _guardando = false);
-                      },
-                    ),
-            ],
+                          setState(() => _guardando = false);
+                        },
+                      ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mi_app/data/repositories/product_repository.dart';
+import 'package:provider/provider.dart';
+import '../../domain/controllers/product_controller.dart';
+import '../../data/services/local_storage_service.dart';
 import 'offline_products_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -11,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usuarioController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final repo = ProductRepository(LocalStorageService());
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: () {
                 // Aquí iría la lógica de login online
-                // por ahora podemos dejar un print
                 print('Login online...');
               },
               child: const Text('Login'),
@@ -45,7 +49,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const OfflineProductsScreen(),
+                    builder: (context) {
+                      // Aquí creamos el ProductController con LocalStorageService
+                      return ChangeNotifierProvider(
+                        create: (_) => ProductController(repo),
+                        child: const OfflineProductsScreen(),
+                      );
+                    },
                   ),
                 );
               },

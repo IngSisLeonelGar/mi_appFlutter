@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/models/producto.dart';
 import '../../domain/controllers/product_controller.dart';
+import '../../data/models/producto.dart';
 
 class ProductTile extends StatelessWidget {
   final Producto producto;
@@ -22,7 +22,30 @@ class ProductTile extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => controller.toggleSeleccion(producto.id),
+      onTap: () async {
+        if (!seleccionado) {
+          // Selecciona el producto
+          controller.toggleSeleccion(producto.id);
+
+          // Reiniciar cantidad a 1 si estaba vacía o es nueva selección
+          cantidadController.text = '1';
+          controller.actualizarCantidad(producto.id, 1);
+
+          // Esperar a que Flutter construya el TextField
+          await Future.delayed(const Duration(milliseconds: 50));
+
+          // Enfocar la cantidad
+          FocusScope.of(context).requestFocus(focusNode);
+          cantidadController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: cantidadController.text.length,
+          );
+        } else {
+          // Producto ya seleccionado → deselecciona
+          controller.toggleSeleccion(producto.id);
+        }
+      },
+
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -44,9 +67,11 @@ class ProductTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(producto.nombre,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(
+                          producto.nombre,
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                         Text(
                           '\$${producto.precio.toStringAsFixed(2)}',
                           style: TextStyle(
@@ -72,12 +97,10 @@ class ProductTile extends StatelessWidget {
                               '¿Estás seguro que quieres eliminar este producto?'),
                           actions: [
                             TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
+                                onPressed: () => Navigator.pop(context, false),
                                 child: const Text('Cancelar')),
                             TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
+                                onPressed: () => Navigator.pop(context, true),
                                 child: const Text('Eliminar')),
                           ],
                         ),
@@ -86,8 +109,7 @@ class ProductTile extends StatelessWidget {
                       if (confirm == true) {
                         await controller.eliminarProducto(producto);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Producto eliminado')),
+                          const SnackBar(content: Text('Producto eliminado')),
                         );
                       }
                     },
@@ -95,7 +117,7 @@ class ProductTile extends StatelessWidget {
                 ],
               ),
 
-              // ➤ CANTIDAD SOLO SI ESTÁ SELECCIONADO
+              // CANTIDAD SOLO SI ESTÁ SELECCIONADO
               if (seleccionado)
                 Padding(
                   padding:
@@ -120,14 +142,9 @@ class ProductTile extends StatelessWidget {
                       },
                       onSubmitted: (value) {
                         final val = int.tryParse(value);
-
                         if (val != null && val > 0) {
                           controller.actualizarCantidad(producto.id, val);
-
-                          // Limpia el buscador ✔️
                           controller.filtrarProductos("");
-
-                          // Opción: notificar a la pantalla principal para limpiar el controller
                           controller.limpiarBuscador?.call();
                         }
                       },
