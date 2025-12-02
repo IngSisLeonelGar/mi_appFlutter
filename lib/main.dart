@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:mi_app/presentation/screens/offline_add_products_screen.dart';
 import 'package:provider/provider.dart';
 import 'presentation/screens/login_screen.dart';
 import 'presentation/screens/offline_products_screen.dart';
+import 'presentation/screens/offline_add_products_screen.dart';
 import 'domain/controllers/product_controller.dart';
-import 'data/repositories/product_repository.dart'; // este archivo debe existir aunque sea básico
+import 'domain/controllers/prelista_controller.dart'; // <--- IMPORT NECESARIO
+import 'data/repositories/product_repository.dart';
 import 'data/services/local_storage_service.dart';
-
 
 void main() {
   final storage = LocalStorageService();
-  final repo = ProductRepository(storage); // ⚠ pasar storage
+  final repo = ProductRepository(storage);
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductController(repo)),
+        ChangeNotifierProvider(create: (_) => PreListaController()..cargarPreListas()),
       ],
       child: const MyApp(),
     ),

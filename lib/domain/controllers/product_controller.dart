@@ -76,15 +76,17 @@ class ProductController extends ChangeNotifier {
   // SELECCIÓN
   // ------------------------------
   void toggleSeleccion(int id) {
-    if (seleccionados.contains(id)) {
-      seleccionados.remove(id);
-      cantidades.remove(id);
-    } else {
-      seleccionados.add(id);
-      cantidades[id] = 1;
-    }
-    notifyListeners();
+  if (seleccionados.contains(id)) {
+    seleccionados.remove(id);
+    cantidades.remove(id);
+  } else {
+    seleccionados.add(id);
+    // Solo asigna 1 si aún no existe
+    cantidades.putIfAbsent(id, () => 1);
   }
+  notifyListeners();
+}
+
 
   void actualizarCantidad(int id, int cant) {
     if (cant <= 0) return;

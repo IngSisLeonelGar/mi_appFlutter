@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mi_app/data/repositories/product_repository.dart';
-import 'package:provider/provider.dart';
-import '../../domain/controllers/product_controller.dart';
 import '../../data/services/local_storage_service.dart';
-import 'offline_products_screen.dart';
+import 'menu_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -45,18 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 10),
             OutlinedButton(
               onPressed: () {
-                // Ir a pantalla de productos offline
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      // Aquí creamos el ProductController con LocalStorageService
-                      return ChangeNotifierProvider(
-                        create: (_) => ProductController(repo),
-                        child: const OfflineProductsScreen(),
-                      );
-                    },
-                  ),
+                  MaterialPageRoute(builder: (_) => const MenuScreen()),
                 );
               },
               child: const Text('Ver productos sin internet'),

@@ -22,30 +22,23 @@ class ProductTile extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        if (!seleccionado) {
-          // Selecciona el producto
-          controller.toggleSeleccion(producto.id);
+      onTap: () {
+        controller.toggleSeleccion(producto.id);
 
-          // Reiniciar cantidad a 1 si estaba vacía o es nueva selección
+        // Si se selecciona por primera vez, inicializar cantidad en 1
+        if (seleccionado == false) {
           cantidadController.text = '1';
           controller.actualizarCantidad(producto.id, 1);
 
-          // Esperar a que Flutter construya el TextField
-          await Future.delayed(const Duration(milliseconds: 50));
-
-          // Enfocar la cantidad
-          FocusScope.of(context).requestFocus(focusNode);
-          cantidadController.selection = TextSelection(
-            baseOffset: 0,
-            extentOffset: cantidadController.text.length,
-          );
-        } else {
-          // Producto ya seleccionado → deselecciona
-          controller.toggleSeleccion(producto.id);
+          Future.delayed(const Duration(milliseconds: 50), () {
+            FocusScope.of(context).requestFocus(focusNode);
+            cantidadController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: cantidadController.text.length,
+            );
+          });
         }
       },
-
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -81,47 +74,40 @@ class ProductTile extends StatelessWidget {
                     ),
                   ),
 
-                  // BOTONES EDITAR / BORRAR
+                  // EDITAR / BORRAR
+                  IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: onEdit),
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Confirmar'),
-                          content: const Text(
-                              '¿Estás seguro que quieres eliminar este producto?'),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar')),
-                            TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Eliminar')),
-                          ],
-                        ),
-                      );
-
-                      if (confirm == true) {
-                        await controller.eliminarProducto(producto);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Producto eliminado')),
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Confirmar'),
+                            content: const Text(
+                                '¿Estás seguro que quieres eliminar este producto?'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancelar')),
+                              TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Eliminar')),
+                            ],
+                          ),
                         );
-                      }
-                    },
-                  ),
+                        if (confirm == true) {
+                          await controller.eliminarProducto(producto);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Producto eliminado')));
+                        }
+                      }),
                 ],
               ),
 
               // CANTIDAD SOLO SI ESTÁ SELECCIONADO
               if (seleccionado)
                 Padding(
-                  padding:
-                      const EdgeInsets.only(left: 10, right: 10, bottom: 8),
+                  padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
                   child: SizedBox(
                     width: 80,
                     child: TextField(
@@ -134,19 +120,9 @@ class ProductTile extends StatelessWidget {
                         border: OutlineInputBorder(),
                         isDense: true,
                       ),
-                      onTap: () {
-                        cantidadController.selection = TextSelection(
-                          baseOffset: 0,
-                          extentOffset: cantidadController.text.length,
-                        );
-                      },
-                      onSubmitted: (value) {
-                        final val = int.tryParse(value);
-                        if (val != null && val > 0) {
-                          controller.actualizarCantidad(producto.id, val);
-                          controller.filtrarProductos("");
-                          controller.limpiarBuscador?.call();
-                        }
+                      onChanged: (val) {
+                        final cant = int.tryParse(val) ?? 1;
+                        controller.actualizarCantidad(producto.id, cant);
                       },
                     ),
                   ),

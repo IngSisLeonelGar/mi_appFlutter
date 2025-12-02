@@ -14,18 +14,21 @@ class OfflineProductsScreen extends StatefulWidget {
 
 class _OfflineProductsScreenState extends State<OfflineProductsScreen> {
   final _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() {}); // Para actualizar la UI del TextField
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductController>().cargarProductos();
     });
-  }  
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<ProductController>();
-    
 
     controller.limpiarBuscador = () {
       _searchController.clear();
@@ -44,35 +47,40 @@ class _OfflineProductsScreenState extends State<OfflineProductsScreen> {
             onPressed: () => controller.importarProductos(),
           ),
         ],
-
-        // 🔍 Buscador
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Buscar producto...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          controller.filtrarProductos('');
+                          FocusScope.of(context).unfocus();
+                        },
+                      )
+                    : null,
               ),
               onChanged: (value) => controller.filtrarProductos(value),
             ),
           ),
         ),
       ),
-
-      // 🔥 ENVOLVEMOS TODO EL BODY AQUÍ PARA CERRAR EL TECLADO
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).unfocus(),
-
         child: controller.cargando
             ? const Center(child: CircularProgressIndicator())
             : ListView.builder(
                 padding: EdgeInsets.only(
-                  bottom: controller.seleccionados.isEmpty ? 16 : 100, // 100 = altura del bottomSheet + margen
+                  bottom: controller.seleccionados.isEmpty ? 16 : 100,
                 ),
                 itemCount: controller.productos.length,
                 itemBuilder: (_, index) {
@@ -89,10 +97,8 @@ class _OfflineProductsScreenState extends State<OfflineProductsScreen> {
                     },
                   );
                 },
-              )
-
+              ),
       ),
-
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -113,19 +119,28 @@ class _OfflineProductsScreenState extends State<OfflineProductsScreen> {
               backgroundColor: Colors.green,
               child: const Icon(Icons.list),
               onPressed: () {
+                // 1. Sincronizar cantidades de todos los TextField
+                for (var id in controller.seleccionados) {
+                  final textController = controller.getCantidadController(id);
+                  final cantidad = int.tryParse(textController.text) ?? 1;
+                  controller.actualizarCantidad(id, cantidad);
+                }
+
+                // 2. Lista de productos seleccionados
                 final productosSeleccionados = controller.productos
                     .where((p) => controller.seleccionados.contains(p.id))
                     .toList();
-                final cantidadesStringKey = controller.cantidades.map(
-                  (key, value) => MapEntry(key.toString(), value),
-                );
 
+                final cantidadesSeleccionadas =
+                    Map<int, int>.from(controller.cantidades);
+
+                // 3. Navegar a pantalla de selección
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => SelectedProductsScreen(
                       productos: productosSeleccionados,
-                      cantidades: cantidadesStringKey,
+                      cantidades: cantidadesSeleccionadas,
                     ),
                   ),
                 );
@@ -133,9 +148,6 @@ class _OfflineProductsScreenState extends State<OfflineProductsScreen> {
             ),
         ],
       ),
-
-
-
       bottomSheet: controller.seleccionados.isEmpty
           ? null
           : Container(
